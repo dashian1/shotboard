@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shotboard 本地工具</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <h1>Shotboard</h1>
+        <p>把一堆脚本变成今天现场怎么拍的执行单</p>
+      </div>
+      <div class="status" id="statusText">未生成</div>
+    </header>
+
+    <main class="layout">
+      <section class="panel api-panel">
+        <details id="apiSettings" class="api-settings">
+          <summary>
+            <span><strong>接口设置</strong><small>中转站地址、模型名和 API Key</small></span>
+            <span class="api-summary" id="apiSummary">未配置</span>
+          </summary>
+          <div class="api-body">
+            <p class="api-note">多数中转站选“OpenAI 兼容 + Bearer”。Key 只发给本机服务，不写入浏览器存储。</p>
+            <div class="grid">
+              <label>接口类型
+                <select id="provider">
+                  <option value="openai">OpenAI 兼容</option>
+                  <option value="anthropic">Anthropic 兼容</option>
+                </select>
+              </label>
+              <label>鉴权方式
+                <select id="authMode">
+                  <option value="bearer">Bearer</option>
+                  <option value="x-api-key">x-api-key</option>
+                </select>
+              </label>
+              <label>API Base URL
+                <input id="baseURL" placeholder="例如：https://api.xxx.com 或 https://api.xxx.com/v1">
+              </label>
+              <label>模型名
+                <input id="model" value="claude-sonnet-4-20250514">
+              </label>
+            </div>
+            <label>API Key
+              <input id="apiKey" type="password" placeholder="sk-...">
+            </label>
+          </div>
+        </details>
+      </section>
+
+      <section class="panel editor">
+        <div class="panel-head">
+          <h2>导入脚本</h2>
+          <span id="scriptStats">0 字</span>
+        </div>
+        <textarea id="scriptInput" rows="12" placeholder="直接粘一条或多条完整脚本。多条脚本可以用 ### 脚本名 或 --- 分隔；也可以直接上传 Excel / CSV / TXT / Markdown。"></textarea>
+        <div class="script-hint">
+          <strong>主流程：</strong>导入脚本 → 生成当天拍摄计划 → 导出执行单。批量会自动识别，不用手动切模式。
+        </div>
+        <div class="batch-bar">
+          <label class="inline-check hidden"><input id="batchMode" type="checkbox"> 批量模式</label>
+          <span>多个脚本用 <code>### 脚本名</code> 或 <code>---</code> 分隔；系统会逐条生成，再合并成当天计划。</span>
+          <label class="upload-button">上传脚本/Excel<input id="fileUpload" type="file" accept=".txt,.md,.csv,.xlsx" hidden></label>
+          <button id="openApiBtn" type="button">接口设置</button>
+          <button id="splitPreviewBtn" type="button">预览拆分</button>
+        </div>
+        <div id="batchList" class="batch-list hidden"></div>
+        <details class="advanced-brief">
+          <summary>可选设置</summary>
+          <div class="grid">
+            <label>视频类型
+              <select id="videoType">
+                <option value="product">带货/产品展示</option>
+                <option value="talking">口播</option>
+                <option value="story">剧情</option>
+                <option value="vlog">Vlog</option>
+                <option value="general">通用</option>
+              </select>
+            </label>
+            <label>最大镜头/单条
+              <input id="maxShots" type="number" value="30" min="5" max="100">
+            </label>
+            <label>目标人群
+              <input id="audience" placeholder="例：25-35 岁通勤女性">
+            </label>
+            <label>拍摄目标
+              <input id="goal" placeholder="例：突出卖点并引导下单">
+            </label>
+            <label>画面风格
+              <input id="styleTone" placeholder="例：干净高级、真实测评">
+            </label>
+            <label>必须保留
+              <input id="mustHave" placeholder="例：价格、口号、产品型号">
+            </label>
+          </div>
+          <textarea id="direction" rows="3" placeholder="比如：固定在茶室拍、主播语气更自然、不要夸大功效、保留价格和产品名等。"></textarea>
+        </details>
+        <div class="actions">
+          <button id="templateBtn">不知道怎么写？插入模板</button>
+          <button id="clearBtn">清空</button>
+          <button id="stopBatchBtn" class="danger hidden">停止批量</button>
+          <button class="primary" id="generateBtn">生成当天拍摄计划</button>
+        </div>
+      </section>
+
+      <section class="panel day-panel">
+        <div class="panel-head">
+          <h2>当天怎么拍</h2>
+          <div class="actions compact">
+            <button id="exportDayPlanBtn">导出当天计划</button>
+          </div>
+        </div>
+        <div id="dayPlanSummary" class="summary">生成后，这里会显示今天现场的拍摄顺序。</div>
+        <div id="dayPlan" class="group-list">
+          <div class="empty-block">这里会按场景、镜头类型、妆造和服化道合并镜头，告诉你十几条脚本当天怎么拍最省事。</div>
+        </div>
+      </section>
+
+      <section class="panel result-panel">
+        <details class="section-details">
+          <summary>分镜明细</summary>
+          <div class="panel-head inner">
+            <span>逐镜头执行表</span>
+            <div class="actions compact">
+              <button id="exportJsonBtn">导出 JSON</button>
+              <button id="exportMdBtn">导出 Markdown</button>
+              <button id="exportCsvBtn">导出表格 CSV</button>
+              <button id="exportBatchCsvBtn">导出全部 CSV</button>
+            </div>
+          </div>
+          <div class="summary" id="summary">等待生成</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>脚本名称</th>
+                  <th>脚本</th>
+                  <th>镜头</th>
+                  <th>状态</th>
+                  <th>时长(秒)</th>
+                  <th>场景</th>
+                  <th>演员妆造</th>
+                  <th>服化道</th>
+                  <th>景别</th>
+                  <th>运镜</th>
+                  <th>画面</th>
+                  <th>动作神情</th>
+                  <th>口播稿</th>
+                  <th>字幕</th>
+                  <th>分镜图</th>
+                  <th>分镜图链接</th>
+                  <th>视频链接</th>
+                </tr>
+              </thead>
+              <tbody id="shotBody">
+                <tr><td colspan="17" class="empty">还没有生成分镜</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
+      <section class="panel shooting-panel">
+        <details class="section-details">
+          <summary>单条脚本拍摄清单</summary>
+          <div class="actions compact">
+            <button id="exportShootingBtn">导出拍摄清单</button>
+          </div>
+          <div class="checklist-layout">
+            <div>
+              <h3>拍摄顺序</h3>
+              <div id="shootingGroups" class="group-list">
+                <div class="empty-block">生成后会按空镜、产品、B-roll、口播自动分组。</div>
+              </div>
+            </div>
+            <div>
+              <h3>道具准备</h3>
+              <div id="propsList" class="props-list">
+                <div class="empty-block">生成后会汇总每个镜头需要的产品和道具。</div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <section class="panel teleprompter-panel">
+        <details class="section-details">
+          <summary>提词器 / 口播</summary>
+          <div class="actions compact">
+            <button id="tpPlay">播放</button>
+            <button id="tpPause">暂停</button>
+            <button id="tpReset">重置</button>
+            <button id="exportTeleprompterBtn">导出口播稿</button>
+          </div>
+          <div class="teleprompter-layout">
+            <div id="teleprompterText" class="teleprompter-text">
+              <div class="empty-block">生成后会提取所有口播稿，并按镜头顺序显示。</div>
+            </div>
+            <aside id="hostDirection" class="host-direction">
+              <h3>主播指导</h3>
+              <p>播放或点击口播行后显示语气、表情、手势和停顿。</p>
+            </aside>
+          </div>
+        </details>
+      </section>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

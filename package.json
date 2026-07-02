@@ -1,0 +1,87 @@
+{
+  "name": "shotboard",
+  "displayName": "Shotboard - 分镜头脚本",
+  "description": "AI-powered storyboard & shooting schedule for short video production",
+  "version": "0.1.0",
+  "publisher": "shotboard",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "storyboard",
+    "分镜头",
+    "短视频",
+    "shooting schedule",
+    "film production"
+  ],
+  "activationEvents": [
+    "onCommand:shotboard.open",
+    "onCommand:shotboard.exportMarkdown",
+    "onCommand:shotboard.exportFeishu"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "shotboard.open",
+        "title": "Shotboard: 打开分镜头脚本编辑器"
+      },
+      {
+        "command": "shotboard.exportMarkdown",
+        "title": "Shotboard: 导出为 Markdown"
+      },
+      {
+        "command": "shotboard.exportFeishu",
+        "title": "Shotboard: 导出到飞书文档"
+      }
+    ],
+    "configuration": {
+      "title": "Shotboard",
+      "properties": {
+        "shotboard.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Anthropic Claude API Key (或留空使用 ANTHROPIC_API_KEY 环境变量)"
+        },
+        "shotboard.language": {
+          "type": "string",
+          "default": "zh",
+          "enum": ["zh", "en"],
+          "description": "默认语言（zh=中文, en=英文）"
+        },
+        "shotboard.defaultVideoType": {
+          "type": "string",
+          "default": "general",
+          "enum": ["talking", "story", "vlog", "product", "general"],
+          "description": "默认短视频类型（口播/剧情/Vlog/产品展示/通用）"
+        },
+        "shotboard.maxShots": {
+          "type": "number",
+          "default": 30,
+          "description": "单次生成的最大镜头数"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "tool": "npm run compile && node tool/server.cjs",
+    "start": "npm run tool",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.x",
+    "typescript": "^5.3.0",
+    "eslint": "^8.56.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0"
+  }
+}
