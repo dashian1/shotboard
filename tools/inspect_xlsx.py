@@ -1,6 +1,6 @@
 from openpyxl import load_workbook
 
-path = r"C:\Users\gba\Downloads\新灵芝茶拍摄脚本分镜-抗氧化-4.xlsx"
+path = r"%USERPROFILE%\Downloads\新灵芝茶拍摄脚本分镜-抗氧化-4.xlsx"
 wb = load_workbook(path)
 print(wb.sheetnames)
 ws = wb.active

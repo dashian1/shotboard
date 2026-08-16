@@ -6,8 +6,8 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.worksheet.datavalidation import DataValidation
 
 
-source = Path(r"C:\Users\gba\Downloads\新灵芝茶拍摄脚本分镜-抗氧化-4.xlsx")
-output = Path(r"C:\Users\gba\Downloads\新灵芝茶拍摄脚本分镜-工具版示例.xlsx")
+source = Path(r"%USERPROFILE%\Downloads\新灵芝茶拍摄脚本分镜-抗氧化-4.xlsx")
+output = Path(r"%USERPROFILE%\Downloads\新灵芝茶拍摄脚本分镜-工具版示例.xlsx")
 
 headers = [
     "脚本",
